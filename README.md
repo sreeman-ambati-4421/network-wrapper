@@ -2,7 +2,7 @@
 **_SDN for docker containers with external DHCP Server_**
 #### Simplified version based on jpetazzo/pipework
 
-Check this post for more details => http://www.nethero.org/post/115387066622/connecting-containers-to-your-production
+Check this post for more details => https://www.cloudbees.com/blog/connecting-docker-containers-to-production-network-ip-per-container
 
 Since Docker recently showed up simplifying the way to containerize applications (compared to manually handle LXC and Network namespaces) many developers are excited to use it to accelerate code deployments by shipping self-sufficient containers from their laptop to the production datacenter linux workers.
 
