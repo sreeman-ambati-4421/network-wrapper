@@ -1,6 +1,6 @@
 #!/bin/bash
-# 
-# Docker network helper for using DHCP  
+#
+# Docker network helper for using DHCP
 # custom/simple version based on jpetazzo/pipework
 #
 # https://github.com/zenvdeluca/network-wrapper
@@ -35,16 +35,16 @@ case "$1" in
       IPAddress=$(docker exec $GUESTNAME ip addr show eth0 |grep -E "inet[ ]" | awk '{print $2}')
       DNS=($(docker exec $GUESTNAME cat /etc/resolv.conf | grep nameserver | awk '{print $2}'))
       Bridge=$(brctl show | head -2 | tail -1 |  awk '{print $1}')
-      echo '{ 
- 	"Container": "'$GUESTNAME'",
+      echo '{
+        "Container": "'$GUESTNAME'",
         "NetworkSettings": {
-          "HWAddr": "'$HWAddr'", 
-          "Bridge": "'$Bridge'", 
-          "IPAddress": "'$(echo $IPAddress |cut -d/ -f1)'", 
-          "IPPrefixLen": "'$(echo $IPAddress |cut -d/ -f2)'", 
-	  "Gateway": "'$Gateway'",
-	  "DNS": "'$(echo ${DNS[@]} | sed 's/\s/, /g')'",
-          "DHCP_PID": "'$(cat /var/run/dhclient-docker.$GUESTNAME.pid)'" 
+          "HWAddr": "'$HWAddr'",
+          "Bridge": "'$Bridge'",
+          "IPAddress": "'$(echo $IPAddress |cut -d/ -f1)'",
+          "IPPrefixLen": "'$(echo $IPAddress |cut -d/ -f2)'",
+          "Gateway": "'$Gateway'",
+          "DNS": "'$(echo ${DNS[@]} | sed 's/\s/, /g')'",
+          "DHCP_PID": "'$(cat /var/run/dhclient-docker.$GUESTNAME.pid)'"
 } }'
       exit 0
       ;;
@@ -62,10 +62,10 @@ then
 else
   VLAN=
   while [[ -z "$MACADDR" ]] ; do
-    ipaddr=$(ip addr show br0 | grep "inet[ ]" | awk '{print $2}' | cut -d/ -f1)
+    ipaddr=$(ip addr show $IFNAME | grep "inet[ ]" | awk '{print $2}' | cut -d/ -f1)
     candidatemac="$(printf '%02x' $(( 0x$(od /dev/urandom -N1 -t x1 -An | cut -c 2-) & 0xFE | 0x02)) ;)$(gethostip $ipaddr | awk '{ print tolower(substr($3,3)) }' | sed 's/.\{2\}/:&/g' |tr \  : ):$(od /dev/urandom -N2 -t x1 -An | cut -c 2- | sed 's/ /:/g')"
     # get current CAM and ARP tables for mac clearance (includes local and remote macs)
-    camtable=$(brctl showmacs br0 | tail -n +2 | awk '{print $2}')
+    camtable=$(brctl showmacs $IFNAME | tail -n +2 | awk '{print $2}')
     arptable=$(arp -an | awk '{print $4}')
     if [[ "$camtable" == *"$candidatemac"* ]] || [[ "$arptable" == *"$candidatemac"* ]] ; then
       echo -n .
@@ -83,15 +83,15 @@ fi
 }
 
 # First step: determine type of first argument (bridge, physical interface...), skip if --wait set
-if [ -z "$WAIT" ]; then 
+if [ -z "$WAIT" ]; then
     if [ -d /sys/class/net/$IFNAME ]
     then
         if [ -d /sys/class/net/$IFNAME/bridge ]
         then
             IFTYPE=bridge
             BRTYPE=linux
-        else 
-	    IFTYPE=phys
+        else
+            IFTYPE=phys
         fi
     else
         case "$IFNAME" in
@@ -107,7 +107,7 @@ if [ -z "$WAIT" ]; then
     fi
 fi
 
-# Set the default container interface name to eth0 
+# Set the default container interface name to eth0
 CONTAINER_IFNAME=${CONTAINER_IFNAME:-eth0}
 
 [ "$WAIT" ] && {
@@ -134,38 +134,38 @@ done < /proc/mounts
 N=$(find "$CGROUPMNT" -name "$GUESTNAME" | wc -l)
 case "$N" in
     0)
-	# If we didn't find anything, try to lookup the container with Docker.
-	if which docker >/dev/null
-	then
+        # If we didn't find anything, try to lookup the container with Docker.
+        if which docker >/dev/null
+        then
         RETRIES=3
         while [ $RETRIES -gt 0 ]; do
-      	    DOCKERPID=$(docker inspect --format='{{ .State.Pid }}' $GUESTNAME)
+            DOCKERPID=$(docker inspect --format='{{ .State.Pid }}' $GUESTNAME)
             [ $DOCKERPID != 0 ] && break
             sleep 1
             RETRIES=$((RETRIES - 1))
         done
 
         [ "$DOCKERPID" = 0 ] && {
-      		echo "Docker inspect returned invalid PID 0"
-    		exit 1
-      	}
+                echo "Docker inspect returned invalid PID 0"
+                exit 1
+        }
 
         [ "$DOCKERPID" = "<no value>" ] && {
-      		echo "Container $GUESTNAME not found, and unknown to Docker."
-    		exit 1
-      	}
-	else
-	    echo "Container $GUESTNAME not found, and Docker not installed."
-	    exit 1
-	fi
-	;;
+                echo "Container $GUESTNAME not found, and unknown to Docker."
+                exit 1
+        }
+        else
+            echo "Container $GUESTNAME not found, and Docker not installed."
+            exit 1
+        fi
+        ;;
     1)
-	true
-	;;
+        true
+        ;;
     *)
-	echo "Found more than one container matching $GUESTNAME."
-	exit 1
-	;;
+        echo "Found more than one container matching $GUESTNAME."
+        exit 1
+        ;;
 esac
 
 if [ "$IPADDR" = "dhcp" ]
@@ -179,8 +179,8 @@ then
         }
     done
     [ -z $DHCP_CLIENT ] && {
-    	echo "You asked for DHCP; but no DHCP client could be found."
-    	exit 1
+        echo "You asked for DHCP; but no DHCP client could be found."
+        exit 1
     }
 else
     echo "only DHCP client supported at the moment"
@@ -232,11 +232,11 @@ then
      if [ $DHCP_CLIENT = "dhclient"  ]
     then
         SHORTGUESTNAME=${GUESTNAME:0:12}
-	ip netns exec $NSPID $DHCP_CLIENT -pf "/var/run/dhclient-docker.$SHORTGUESTNAME.pid" -H $SHORTGUESTNAME $CONTAINER_IFNAME
+        ip netns exec $NSPID $DHCP_CLIENT -pf "/var/run/dhclient-docker.$SHORTGUESTNAME.pid" -H $SHORTGUESTNAME $CONTAINER_IFNAME
     fi
 else
     echo "only udhcpc / dhclient currently supported"
-    exit 1   
+    exit 1
 fi
 
 # Give our ARP neighbors a nudge about the new interface
@@ -254,5 +254,4 @@ fi
 # Remove NSPID to avoid `ip netns` catch it.
 [ -f /var/run/netns/$NSPID ] && rm -f /var/run/netns/$NSPID
 exit 0
-
 
