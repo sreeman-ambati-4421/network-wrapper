@@ -24,6 +24,27 @@ fi
 GUESTNAME=$2
 IPADDR=$3
 MACADDR=$4
+RUN_FILE=/var/run/network-wrapper
+
+# Get the human readable name of the container from container_id
+# This will be used to track assigned MACs, so re-creating or re-starting container will get same ip address
+STAT_GUEST=$(docker ps -a  --format "{{.ID}}" | grep ${GUESTNAME:0:12} >/dev/null 2>&1; echo $?)
+if [[ "$STAT_GUEST" == "0" ]]; then
+    GUEST_LABEL_NAME=$(docker ps -a  --format "{{.ID}}\t{{.Names}}" | grep ${GUESTNAME:0:12} | awk '{print $NF}')
+else
+    GUEST_LABEL_NAME=${GUESTNAME}
+fi
+
+if [[ ! -e $RUN_FILE ]]; then
+    touch $RUN_FILE
+fi
+
+# If the container name is ever used on this machine, re-use the same mac to get same ip address
+STAT_GUEST=$(grep $GUEST_LABEL_NAME $RUN_FILE >/dev/null 2>&1; echo $?)
+if [[ "$STAT_GUEST" == "0" && -z $MACADDR ]]; then
+    # Guest is pre-existing one, re-using mac
+    MACADDR=$(grep $GUEST_LABEL_NAME $RUN_FILE | awk '{print $2}')
+fi
 
 case "$1" in
     --wait)
@@ -249,6 +270,12 @@ else
     echo "Warning: arping not found;"
 fi
 
+# Record the container name and its mac address
+STAT_GUEST=$(grep $GUEST_LABEL_NAME $RUN_FILE >/dev/null 2>&1;  echo $?)
+if [[ $STAT_GUEST -ne 0 ]]; then
+    # Guest is new, adding to tracker
+    echo "$GUEST_LABEL_NAME $(docker exec $GUEST_LABEL_NAME ip addr show eth0 |grep -E 'ether' | awk '{print $2}')" >> $RUN_FILE
+fi
 # Print some useful info
 if [ $DEBUG -eq 1 ] ; then
   network-wrapper inspect $SHORTGUESTNAME

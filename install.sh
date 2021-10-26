@@ -5,6 +5,8 @@ then
     echo "Installing network-wrapper"
     cp -rf ./network-wrapper ./dhcp-garbagecollection.sh /usr/bin/
     chmod +x /usr/bin/dhcp-garbagecollection.sh /usr/bin/network-wrapper
+    touch /var/run/network-wrapper
+    chmod 777 /var/run/network-wrapper
 elif [[ "$1" == "uninstall" ]]
 then
     echo "Uninstalling network-wrapper"
