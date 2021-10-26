@@ -232,6 +232,8 @@ then
      if [ $DHCP_CLIENT = "dhclient"  ]
     then
         SHORTGUESTNAME=${GUESTNAME:0:12}
+        # Removing -H option dependency, as this option is not supported in ubuntu. 
+        # in Centos/RHEL, this is an optional and not required. 
         ip netns exec $NSPID $DHCP_CLIENT -pf "/var/run/dhclient-docker.$SHORTGUESTNAME.pid" -H $SHORTGUESTNAME $CONTAINER_IFNAME
     fi
 else
