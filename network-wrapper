@@ -292,5 +292,7 @@ if [ $DEBUG -eq 1 ] ; then
 fi
 # Remove NSPID to avoid `ip netns` catch it.
 [ -f /var/run/netns/$NSPID ] && rm -f /var/run/netns/$NSPID
+# Added a debug printout to let know that the script ran to completion successfully.
+echo network-wrapper configuration successful: $GUEST_LABEL_NAME
 exit 0
 
