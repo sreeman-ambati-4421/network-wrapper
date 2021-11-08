@@ -40,10 +40,10 @@ if [[ ! -e $RUN_FILE ]]; then
 fi
 
 # If the container name is ever used on this machine, re-use the same mac to get same ip address
-STAT_GUEST=$(grep $GUEST_LABEL_NAME $RUN_FILE >/dev/null 2>&1; echo $?)
+STAT_GUEST=$(grep "$GUEST_LABEL_NAME" $RUN_FILE >/dev/null 2>&1; echo $?)
 if [[ "$STAT_GUEST" == "0" && -z $MACADDR ]]; then
     # Guest is pre-existing one, re-using mac
-    MACADDR=$(grep $GUEST_LABEL_NAME $RUN_FILE | awk '{print $2}')
+    MACADDR=$(grep "$GUEST_LABEL_NAME" $RUN_FILE | awk '{print $2}')
 fi
 
 case "$1" in
@@ -271,7 +271,7 @@ else
 fi
 
 # Record the container name and its mac address
-STAT_GUEST=$(grep $GUEST_LABEL_NAME $RUN_FILE >/dev/null 2>&1;  echo $?)
+STAT_GUEST=$(grep "$GUEST_LABEL_NAME" $RUN_FILE >/dev/null 2>&1;  echo $?)
 if [[ $STAT_GUEST -ne 0 ]]; then
     # Guest is new, adding to tracker
     echo "$GUEST_LABEL_NAME $(docker exec $GUEST_LABEL_NAME ip addr show eth0 |grep -E 'ether' | awk '{print $2}')" >> $RUN_FILE
