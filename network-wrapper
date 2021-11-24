@@ -36,7 +36,7 @@ if [[ "$STAT_GUEST" == "0" ]]; then
     GUEST_LABEL_NAME=${GUEST_LABEL_NAME:1}
 else
     # Should we really continue ?
-    exit
+    GUEST_LABEL_NAME=${GUESTNAME}
 fi
 
 if [[ ! -e $RUN_FILE ]]; then
